@@ -6,6 +6,11 @@ export type WorkPeriod = {
   coefficient: number;
 };
 
+export type Employee = {
+  name: string;
+  periods: WorkPeriod[];
+};
+
 export const calculateExperience = (periods: WorkPeriod[]): number => {
   let totalDays = 0;
 
@@ -62,4 +67,48 @@ const pluralize = (count: number, form1: string, form2: string, form5: string): 
   }
   
   return form5;
+};
+
+// Function to save employee data to a file
+export const saveEmployeeData = (employee: Employee): void => {
+  const data = JSON.stringify(employee, (key, value) => {
+    // Convert Date objects to strings
+    if (key === 'startDate' || key === 'endDate') {
+      return value ? new Date(value).toISOString() : null;
+    }
+    return value;
+  }, 2);
+  
+  const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+  const fileName = `${employee.name.replace(/\s+/g, '_')}_стаж.txt`;
+  
+  // Create a download link and trigger it
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  link.click();
+  
+  // Cleanup
+  URL.revokeObjectURL(link.href);
+};
+
+// Function to parse employee data from file content
+export const parseEmployeeData = (content: string): Employee => {
+  try {
+    const parsed = JSON.parse(content);
+    
+    // Convert string dates back to Date objects
+    if (parsed.periods && Array.isArray(parsed.periods)) {
+      parsed.periods = parsed.periods.map((period: WorkPeriod) => ({
+        ...period,
+        startDate: period.startDate ? new Date(period.startDate) : null,
+        endDate: period.endDate ? new Date(period.endDate) : null,
+      }));
+    }
+    
+    return parsed;
+  } catch (error) {
+    console.error('Error parsing employee data:', error);
+    return { name: '', periods: [] };
+  }
 };
