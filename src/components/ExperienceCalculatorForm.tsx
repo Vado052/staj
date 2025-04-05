@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 const ExperienceCalculatorForm: React.FC = () => {
   const [employee, setEmployee] = useState<Employee>({
     name: "",
+    rank: "",
     periods: [
       {
         id: uuidv4(),
@@ -65,6 +67,13 @@ const ExperienceCalculatorForm: React.FC = () => {
     setEmployee({
       ...employee,
       name
+    });
+  };
+  
+  const updateEmployeeRank = (rank: string) => {
+    setEmployee({
+      ...employee,
+      rank
     });
   };
 
@@ -134,7 +143,9 @@ const ExperienceCalculatorForm: React.FC = () => {
 
           <EmployeeInfoInput 
             name={employee.name} 
-            onChange={updateEmployeeName} 
+            rank={employee.rank}
+            onChange={updateEmployeeName}
+            onRankChange={updateEmployeeRank}
           />
 
           <div className="space-y-4">

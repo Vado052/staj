@@ -9,6 +9,7 @@ export type WorkPeriod = {
 
 export type Employee = {
   name: string;
+  rank?: string; // Added optional rank field
   periods: WorkPeriod[];
 };
 

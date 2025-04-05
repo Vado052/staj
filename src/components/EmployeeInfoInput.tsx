@@ -2,13 +2,37 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const RANKS = [
+  "рядовой",
+  "сержант",
+  "старший сержант",
+  "старшина",
+  "прапорщик",
+  "старший прапорщик",
+  "лейтенант",
+  "старший лейтенант",
+  "капитан",
+  "майор",
+  "подполковник",
+  "полковник",
+  "генерал-майор"
+];
 
 interface EmployeeInfoInputProps {
   name: string;
+  rank?: string;
   onChange: (name: string) => void;
+  onRankChange: (rank: string) => void;
 }
 
-const EmployeeInfoInput: React.FC<EmployeeInfoInputProps> = ({ name, onChange }) => {
+const EmployeeInfoInput: React.FC<EmployeeInfoInputProps> = ({ 
+  name, 
+  rank = "", 
+  onChange,
+  onRankChange
+}) => {
   // Parse the full name into its components
   const nameParts = name.split(' ');
   const lastName = nameParts[0] || '';
@@ -31,7 +55,7 @@ const EmployeeInfoInput: React.FC<EmployeeInfoInputProps> = ({ name, onChange })
   return (
     <div className="space-y-4">
       <h3 className="font-medium">Информация о работнике</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label htmlFor="employee-lastname" className="text-sm">Фамилия</Label>
           <Input
@@ -78,6 +102,22 @@ const EmployeeInfoInput: React.FC<EmployeeInfoInputProps> = ({ name, onChange })
             placeholder="Отчество"
             className="w-full"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="employee-rank" className="text-sm">Звание</Label>
+          <Select value={rank} onValueChange={onRankChange}>
+            <SelectTrigger id="employee-rank" className="w-full">
+              <SelectValue placeholder="Выберите звание" />
+            </SelectTrigger>
+            <SelectContent>
+              {RANKS.map((rankOption) => (
+                <SelectItem key={rankOption} value={rankOption}>
+                  {rankOption}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
