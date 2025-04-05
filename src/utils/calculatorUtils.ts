@@ -1,6 +1,7 @@
 
 export type WorkPeriod = {
   id: string;
+  name: string; // Added name field
   startDate: Date | null;
   endDate: Date | null;
   coefficient: number;

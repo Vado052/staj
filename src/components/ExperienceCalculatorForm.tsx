@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +15,7 @@ const ExperienceCalculatorForm: React.FC = () => {
     periods: [
       {
         id: uuidv4(),
+        name: "Основной период",
         startDate: null,
         endDate: null,
         coefficient: 1,
@@ -26,12 +26,16 @@ const ExperienceCalculatorForm: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addPeriod = () => {
+    // Generate a number for the new period
+    const periodNumber = employee.periods.length + 1;
+    
     setEmployee({
       ...employee,
       periods: [
         ...employee.periods,
         {
           id: uuidv4(),
+          name: `Период ${periodNumber}`,
           startDate: null,
           endDate: null,
           coefficient: 1,
@@ -40,6 +44,7 @@ const ExperienceCalculatorForm: React.FC = () => {
     });
   };
 
+  
   const updatePeriod = (id: string, updatedPeriod: WorkPeriod) => {
     setEmployee({
       ...employee,
@@ -82,6 +87,15 @@ const ExperienceCalculatorForm: React.FC = () => {
       try {
         const content = e.target?.result as string;
         const loadedEmployee = parseEmployeeData(content);
+        
+        // Ensure all periods have names (for backwards compatibility)
+        if (loadedEmployee && loadedEmployee.periods) {
+          loadedEmployee.periods = loadedEmployee.periods.map((period, index) => ({
+            ...period,
+            name: period.name || `Период ${index + 1}`
+          }));
+        }
+        
         setEmployee(loadedEmployee);
         toast.success("Данные успешно загружены");
       } catch (error) {

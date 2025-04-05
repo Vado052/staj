@@ -21,6 +21,13 @@ const WorkPeriodInput: React.FC<WorkPeriodInputProps> = ({
   onDelete,
   isDeleteDisabled,
 }) => {
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({
+      ...period,
+      name: e.target.value,
+    });
+  };
+
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value) {
       onChange({
@@ -64,14 +71,22 @@ const WorkPeriodInput: React.FC<WorkPeriodInputProps> = ({
   return (
     <div className="p-4 border border-gray-200 rounded-md mb-4 shadow-sm bg-white">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-md font-medium">Период работы</h3>
+        <div className="flex-grow mr-4">
+          <Input
+            type="text"
+            value={period.name || ""}
+            onChange={handleNameChange}
+            placeholder="Название периода"
+            className="font-medium"
+          />
+        </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={onDelete}
           disabled={isDeleteDisabled}
           title={isDeleteDisabled ? "Необходим минимум один период" : "Удалить период"}
-          className="h-8 w-8"
+          className="h-8 w-8 flex-shrink-0"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
