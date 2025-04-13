@@ -3,24 +3,21 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Проверка наличия npm
-try {
-  execSync('npm --version');
-} catch (error) {
-  console.error('npm не найден, но требуется для сборки');
-  process.exit(1);
-}
-
-console.log('Установка необходимых пакетов...');
+// Проверка наличия необходимых инструментов
+console.log('Проверка наличия инструментов для сборки...');
 
 try {
-  // Создание проекта Visual Studio
   const vsProjectPath = path.join(__dirname, 'vs-project');
+  
+  // Создание директории проекта, если её нет
   if (!fs.existsSync(vsProjectPath)) {
+    console.log('Создание директории проекта...');
     fs.mkdirSync(vsProjectPath, { recursive: true });
+  }
     
-    // Создание файла решения
-    const slnPath = path.join(vsProjectPath, 'ExperienceCalculator.sln');
+  // Создание файла решения
+  const slnPath = path.join(vsProjectPath, 'ExperienceCalculator.sln');
+  if (!fs.existsSync(slnPath)) {
     console.log('Создание файла решения Visual Studio...');
     fs.writeFileSync(slnPath, `
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -45,13 +42,17 @@ Global
 	EndGlobalSection
 EndGlobal
     `.trim());
+  }
     
-    // Создание директории проекта
-    const projectDir = path.join(vsProjectPath, 'ExperienceCalculator');
+  // Создание директории проекта
+  const projectDir = path.join(vsProjectPath, 'ExperienceCalculator');
+  if (!fs.existsSync(projectDir)) {
     fs.mkdirSync(projectDir, { recursive: true });
+  }
     
-    // Создание файла проекта
-    const csprojPath = path.join(projectDir, 'ExperienceCalculator.csproj');
+  // Создание файла проекта
+  const csprojPath = path.join(projectDir, 'ExperienceCalculator.csproj');
+  if (!fs.existsSync(csprojPath)) {
     console.log('Создание файла C# проекта...');
     fs.writeFileSync(csprojPath, `
 <Project Sdk="Microsoft.NET.Sdk">
@@ -83,19 +84,30 @@ EndGlobal
   </ItemGroup>
 </Project>
     `.trim());
+  }
     
-    // Создание файла иконки приложения
-    const iconPath = path.join(projectDir, 'app-icon.ico');
+  // Создание файла иконки приложения
+  const iconPath = path.join(projectDir, 'app-icon.ico');
+  if (!fs.existsSync(iconPath)) {
     try {
       // Копируем favicon.ico в папку проекта как app-icon.ico
-      fs.copyFileSync(path.join(__dirname, 'public', 'favicon.ico'), iconPath);
+      const publicFaviconPath = path.join(__dirname, 'public', 'favicon.ico');
+      if (fs.existsSync(publicFaviconPath)) {
+        console.log('Копирование файла иконки...');
+        fs.copyFileSync(publicFaviconPath, iconPath);
+      } else {
+        console.log('Файл иконки не найден, создаем пустой файл иконки');
+        fs.writeFileSync(iconPath, '');
+      }
     } catch (iconError) {
       console.log('Не удалось скопировать иконку, создаем пустой файл иконки');
       fs.writeFileSync(iconPath, '');
     }
+  }
     
-    // Создание файла программы
-    const programPath = path.join(projectDir, 'Program.cs');
+  // Создание файла программы
+  const programPath = path.join(projectDir, 'Program.cs');
+  if (!fs.existsSync(programPath)) {
     console.log('Создание файла C# программы...');
     fs.writeFileSync(programPath, `
 using System;
@@ -127,7 +139,14 @@ namespace ExperienceCalculator
             this.Size = new System.Drawing.Size(1200, 800);
             this.MinimumSize = new System.Drawing.Size(800, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Icon = new System.Drawing.Icon("app-icon.ico", 16, 16);
+            
+            try {
+                if (File.Exists("app-icon.ico")) {
+                    this.Icon = new System.Drawing.Icon("app-icon.ico");
+                }
+            } catch (Exception ex) {
+                Console.WriteLine($"Не удалось загрузить иконку: {ex.Message}");
+            }
             
             webView = new WebView2();
             webView.Dock = DockStyle.Fill;
@@ -142,18 +161,25 @@ namespace ExperienceCalculator
             string wwwDir = Path.Combine(appDir, "www");
             string indexPath = Path.Combine(wwwDir, "index.html");
 
-            if (File.Exists(indexPath))
+            try
             {
-                await webView.EnsureCoreWebView2Async(null);
-                webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-                    "calculator.local", wwwDir, CoreWebView2HostResourceAccessKind.Allow);
-                webView.CoreWebView2.Navigate("https://calculator.local/index.html");
+                if (Directory.Exists(wwwDir) && File.Exists(indexPath))
+                {
+                    await webView.EnsureCoreWebView2Async(null);
+                    webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                        "calculator.local", wwwDir, CoreWebView2HostResourceAccessKind.Allow);
+                    webView.CoreWebView2.Navigate("https://calculator.local/index.html");
+                }
+                else
+                {
+                    MessageBox.Show($"Не удалось найти файл: {indexPath}\\n\\nПожалуйста, убедитесь, что вы выполнили сборку веб-приложения командой 'npm run build' перед запуском.", 
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show($"Не удалось найти файл: {indexPath}", "Ошибка", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                this.Close();
+                MessageBox.Show($"Произошла ошибка при инициализации WebView2: {ex.Message}\\n\\nУбедитесь, что установлен Microsoft Edge WebView2 Runtime.", 
+                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
@@ -161,37 +187,60 @@ namespace ExperienceCalculator
     `.trim());
   }
 
-  // Добавление скриптов сборки Visual Studio в package.json
-  const packageJsonPath = path.join(__dirname, 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  
-  if (!packageJson.scripts['vs:build']) {
-    packageJson.scripts['vs:build'] = 'cd vs-project && dotnet build ExperienceCalculator.sln';
-    packageJson.scripts['vs:run'] = 'cd vs-project && dotnet run --project ExperienceCalculator/ExperienceCalculator.csproj';
-    packageJson.scripts['vs:publish'] = 'cd vs-project && dotnet publish ExperienceCalculator.sln -c Release -o ../vs-dist';
-  }
-  
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  console.log('Добавлены скрипты сборки Visual Studio в package.json');
+  // Создание VS_README.md с подробными инструкциями
+  const vsReadmePath = path.join(__dirname, 'VS_README.md');
+  if (!fs.existsSync(vsReadmePath)) {
+    console.log('Создание файла с инструкциями...');
+    fs.writeFileSync(vsReadmePath, `
+# Запуск проекта в Visual Studio 2022
 
-  // Сборка Vite приложения если еще не собрано
-  if (!fs.existsSync(path.join(__dirname, 'dist'))) {
-    console.log('Сборка веб-приложения...');
-    execSync('npm run build', { stdio: 'inherit' });
+## Предварительные требования
+
+1. Visual Studio 2022 (Community, Professional или Enterprise)
+2. .NET SDK 6.0 или выше
+3. Компонент "Разработка классических приложений .NET" в Visual Studio
+4. Компонент "Разработка для UWP" в Visual Studio (для WebView2)
+5. Microsoft Edge WebView2 Runtime (устанавливается автоматически с Visual Studio 2022)
+
+## Порядок действий для открытия проекта
+
+### Способ 1: Через BAT-файл (рекомендуется)
+1. Запустите файл \`open-in-vs.bat\` в корне проекта
+
+### Способ 2: Вручную
+1. Откройте Visual Studio 2022
+2. Выберите "Открыть проект или решение"
+3. Найдите и откройте файл \`vs-project/ExperienceCalculator.sln\`
+
+## Первый запуск
+
+1. Соберите веб-приложение командой \`npm run build\`
+2. В Visual Studio нажмите F5 или кнопку "Пуск" для запуска проекта
+
+## Устранение проблем
+
+Если у вас возникают сложности с открытием проекта:
+
+1. Убедитесь, что установлена Visual Studio 2022 с компонентами:
+   - "Разработка классических приложений .NET"
+   - "Разработка для UWP"
+   
+2. Проверьте наличие .NET SDK 6.0 или выше:
+   - Откройте командную строку и выполните \`dotnet --version\`
+   - Версия должна быть 6.0.x или выше
+
+3. Установите Microsoft Edge WebView2 Runtime с сайта Microsoft
+
+4. Если проект не открывается, удалите папку \`vs-project\` и заново запустите \`open-in-vs.bat\`
+`.trim());
   }
 
-  // Сборка проекта Visual Studio
-  console.log('Сборка проекта Visual Studio...');
-  try {
-    execSync('npm run vs:build', { stdio: 'inherit' });
-    console.log('Готово! Проект Visual Studio успешно создан.');
-    console.log('Вы можете открыть проект в Visual Studio 2022, запустив open-in-vs.bat');
-  } catch (vsError) {
-    console.error('Ошибка при сборке проекта Visual Studio:', vsError.message);
-    console.log('Убедитесь, что у вас установлен .NET SDK 6.0 или выше.');
-  }
+  console.log('Проект для Visual Studio успешно создан!');
+  console.log('Вы можете открыть проект, запустив файл open-in-vs.bat');
 
 } catch (error) {
-  console.error('Ошибка в процессе сборки:', error.message);
+  console.error('Ошибка при создании проекта:', error.message);
+  console.error('Пожалуйста, убедитесь, что у вас есть права на запись в директорию проекта');
+  console.error('и установлен .NET SDK 6.0 или выше.');
   process.exit(1);
 }
