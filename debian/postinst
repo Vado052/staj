@@ -1,0 +1,7 @@
+
+#!/bin/sh
+set -e
+if [ "$1" = configure ]; then
+    chmod +x /usr/bin/calculator-work-experience
+fi
+exit 0

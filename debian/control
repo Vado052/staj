@@ -1,0 +1,15 @@
+
+Source: calculator-work-experience
+Section: web
+Priority: optional
+Maintainer: Maintainer <maintainer@example.com>
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.0.0
+
+Package: calculator-work-experience
+Architecture: all
+Depends: nodejs (>= 14.0.0)
+Description: Work Experience Calculator
+ A web application for calculating work experience with coefficients.
+ Allows users to track and calculate work periods with different coefficients
+ and save the calculated results.
