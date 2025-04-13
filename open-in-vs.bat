@@ -1,16 +1,19 @@
 
 @echo off
+echo Открытие проекта в Visual Studio 2022...
+
 if exist "vs-project\ExperienceCalculator.sln" (
-  echo Opening solution in Visual Studio 2022...
+  echo Открытие существующего решения...
   start "" "vs-project\ExperienceCalculator.sln"
 ) else (
-  echo Building Visual Studio project first...
+  echo Создание проекта Visual Studio...
   node build-exe.js
   if exist "vs-project\ExperienceCalculator.sln" (
-    echo Opening solution in Visual Studio 2022...
+    echo Открытие созданного решения...
     start "" "vs-project\ExperienceCalculator.sln"
   ) else (
-    echo Failed to create Visual Studio solution. Check for errors.
+    echo Ошибка: Не удалось создать решение для Visual Studio.
+    echo Проверьте, установлен ли .NET SDK 6.0+
     pause
   )
 )

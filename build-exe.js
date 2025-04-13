@@ -3,101 +3,31 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Check for npm
+// Проверка наличия npm
 try {
   execSync('npm --version');
 } catch (error) {
-  console.error('npm is required but not found');
+  console.error('npm не найден, но требуется для сборки');
   process.exit(1);
 }
 
-console.log('Installing required packages...');
+console.log('Установка необходимых пакетов...');
 
 try {
-  // Install electron and electron-builder if not already installed
-  execSync('npm list electron || npm install --save-dev electron@latest');
-  execSync('npm list electron-builder || npm install --save-dev electron-builder@latest');
-  
-  // Create electron main.js file if it doesn't exist
-  const mainJsPath = path.join(__dirname, 'electron-main.js');
-  if (!fs.existsSync(mainJsPath)) {
-    console.log('Creating electron main.js file...');
-    fs.writeFileSync(mainJsPath, `
-      const { app, BrowserWindow } = require('electron');
-      const path = require('path');
-
-      let mainWindow;
-
-      function createWindow() {
-        mainWindow = new BrowserWindow({
-          width: 1200,
-          height: 800,
-          webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-          },
-          title: "Калькулятор стажа работы"
-        });
-
-        mainWindow.setMenu(null);
-        mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-      }
-
-      app.whenReady().then(() => {
-        createWindow();
-        
-        app.on('activate', function () {
-          if (BrowserWindow.getAllWindows().length === 0) createWindow();
-        });
-      });
-
-      app.on('window-all-closed', function () {
-        if (process.platform !== 'darwin') app.quit();
-      });
-    `);
-  }
-
-  // Create electron-builder config if it doesn't exist
-  const builderConfigPath = path.join(__dirname, 'electron-builder.json');
-  if (!fs.existsSync(builderConfigPath)) {
-    console.log('Creating electron-builder configuration...');
-    fs.writeFileSync(builderConfigPath, JSON.stringify({
-      "appId": "com.calculator.workexperience",
-      "productName": "Калькулятор стажа работы",
-      "directories": {
-        "output": "electron-dist"
-      },
-      "files": [
-        "dist/**/*",
-        "electron-main.js"
-      ],
-      "win": {
-        "target": "nsis",
-        "icon": "public/favicon.ico"
-      },
-      "nsis": {
-        "oneClick": false,
-        "allowToChangeInstallationDirectory": true,
-        "createDesktopShortcut": true,
-        "createStartMenuShortcut": true
-      }
-    }, null, 2));
-  }
-
-  // Create Visual Studio solution and project files
+  // Создание проекта Visual Studio
   const vsProjectPath = path.join(__dirname, 'vs-project');
   if (!fs.existsSync(vsProjectPath)) {
     fs.mkdirSync(vsProjectPath, { recursive: true });
     
-    // Create solution file
+    // Создание файла решения
     const slnPath = path.join(vsProjectPath, 'ExperienceCalculator.sln');
-    console.log('Creating Visual Studio solution file...');
+    console.log('Создание файла решения Visual Studio...');
     fs.writeFileSync(slnPath, `
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExperienceCalculator", "ExperienceCalculator\\ExperienceCalculator.csproj", "{GUID-1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExperienceCalculator", "ExperienceCalculator\\ExperienceCalculator.csproj", "{12345678-1234-1234-1234-123456789ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -108,21 +38,21 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{GUID-1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{GUID-1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{GUID-1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{GUID-1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
-    `.trim().replace('{GUID-1}', '12345678-1234-1234-1234-123456789ABC'));
+    `.trim());
     
-    // Create project directory
+    // Создание директории проекта
     const projectDir = path.join(vsProjectPath, 'ExperienceCalculator');
     fs.mkdirSync(projectDir, { recursive: true });
     
-    // Create csproj file
+    // Создание файла проекта
     const csprojPath = path.join(projectDir, 'ExperienceCalculator.csproj');
-    console.log('Creating C# project file...');
+    console.log('Создание файла C# проекта...');
     fs.writeFileSync(csprojPath, `
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -132,6 +62,10 @@ EndGlobal
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>app-icon.ico</ApplicationIcon>
+    <Authors>Калькулятор стажа работы</Authors>
+    <Product>Калькулятор стажа работы</Product>
+    <Description>Приложение для расчета стажа работы с учетом коэффициентов</Description>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\\..\\dist\\**">
@@ -140,14 +74,29 @@ EndGlobal
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="app-icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1264.42" />
   </ItemGroup>
 </Project>
     `.trim());
     
-    // Create Program.cs
+    // Создание файла иконки приложения
+    const iconPath = path.join(projectDir, 'app-icon.ico');
+    try {
+      // Копируем favicon.ico в папку проекта как app-icon.ico
+      fs.copyFileSync(path.join(__dirname, 'public', 'favicon.ico'), iconPath);
+    } catch (iconError) {
+      console.log('Не удалось скопировать иконку, создаем пустой файл иконки');
+      fs.writeFileSync(iconPath, '');
+    }
+    
+    // Создание файла программы
     const programPath = path.join(projectDir, 'Program.cs');
-    console.log('Creating C# program file...');
+    console.log('Создание файла C# программы...');
     fs.writeFileSync(programPath, `
 using System;
 using System.IO;
@@ -176,6 +125,9 @@ namespace ExperienceCalculator
         {
             this.Text = "Калькулятор стажа работы";
             this.Size = new System.Drawing.Size(1200, 800);
+            this.MinimumSize = new System.Drawing.Size(800, 600);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Icon = new System.Drawing.Icon("app-icon.ico", 16, 16);
             
             webView = new WebView2();
             webView.Dock = DockStyle.Fill;
@@ -209,15 +161,9 @@ namespace ExperienceCalculator
     `.trim());
   }
 
-  // Add Visual Studio build scripts to package.json
+  // Добавление скриптов сборки Visual Studio в package.json
   const packageJsonPath = path.join(__dirname, 'package.json');
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  
-  if (!packageJson.scripts['electron:start']) {
-    packageJson.scripts['electron:start'] = 'electron electron-main.js';
-    packageJson.scripts['electron:build'] = 'electron-builder --win';
-    packageJson.main = 'electron-main.js';
-  }
   
   if (!packageJson.scripts['vs:build']) {
     packageJson.scripts['vs:build'] = 'cd vs-project && dotnet build ExperienceCalculator.sln';
@@ -226,37 +172,26 @@ namespace ExperienceCalculator
   }
   
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  console.log('Added Visual Studio build scripts to package.json');
+  console.log('Добавлены скрипты сборки Visual Studio в package.json');
 
-  // Create batch file to open in Visual Studio
-  const openVsPath = path.join(__dirname, 'open-in-vs.bat');
-  console.log('Creating batch file to open in Visual Studio...');
-  fs.writeFileSync(openVsPath, `
-@echo off
-start "" "vs-project\\ExperienceCalculator.sln"
-  `.trim());
-
-  // Build the Vite app
-  console.log('Building the application...');
-  execSync('npm run build', { stdio: 'inherit' });
-
-  // Build Visual Studio project
-  console.log('Building Visual Studio project...');
-  try {
-    execSync('npm run vs:build', { stdio: 'inherit' });
-    console.log('Done! The Visual Studio project is ready.');
-    console.log('You can open the solution in Visual Studio 2022 by running open-in-vs.bat');
-  } catch (vsError) {
-    console.error('Error building Visual Studio project:', vsError.message);
-    console.log('Make sure you have .NET SDK 6.0 or later installed.');
+  // Сборка Vite приложения если еще не собрано
+  if (!fs.existsSync(path.join(__dirname, 'dist'))) {
+    console.log('Сборка веб-приложения...');
+    execSync('npm run build', { stdio: 'inherit' });
   }
 
-  // Still build the electron app as a fallback
-  console.log('Building Windows executable installer...');
-  execSync('npm run electron:build', { stdio: 'inherit' });
-  console.log('Done! The .exe installer is in the electron-dist folder.');
+  // Сборка проекта Visual Studio
+  console.log('Сборка проекта Visual Studio...');
+  try {
+    execSync('npm run vs:build', { stdio: 'inherit' });
+    console.log('Готово! Проект Visual Studio успешно создан.');
+    console.log('Вы можете открыть проект в Visual Studio 2022, запустив open-in-vs.bat');
+  } catch (vsError) {
+    console.error('Ошибка при сборке проекта Visual Studio:', vsError.message);
+    console.log('Убедитесь, что у вас установлен .NET SDK 6.0 или выше.');
+  }
+
 } catch (error) {
-  console.error('Error in build process:', error.message);
+  console.error('Ошибка в процессе сборки:', error.message);
   process.exit(1);
 }
-
