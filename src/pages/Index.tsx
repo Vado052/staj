@@ -1,11 +1,27 @@
 
-import React from "react";
-import Calculator from "@/components/Calculator";
+import ExperienceCalculatorForm from "@/components/ExperienceCalculatorForm";
 
-const Index: React.FC = () => {
+const Index = () => {
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Calculator />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container max-w-4xl mx-auto px-4">
+        <header className="mb-8 text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-2">
+            Калькулятор стажа работы
+          </h1>
+          <p className="text-gray-600">
+            Расчет общего трудового стажа с применением коэффициентов и сохранением данных
+          </p>
+        </header>
+        
+        <main>
+          <ExperienceCalculatorForm />
+        </main>
+        
+        <footer className="mt-12 text-center text-gray-500 text-sm">
+          <p>© 2025 Калькулятор стажа работы</p>
+        </footer>
+      </div>
     </div>
   );
 };
